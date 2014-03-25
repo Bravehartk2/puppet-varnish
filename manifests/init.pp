@@ -70,6 +70,7 @@ class varnish (
   $shmlog_dir                   = '/var/lib/varnish',
   $shmlog_tempfs                = true,
   $version                      = present,
+  $template                     = undef,
 ) {
 
   # read parameters
@@ -92,18 +93,33 @@ class varnish (
       require => Package['varnish'],
     }
   }
-
-  # varnish config file
-  file { 'varnish-conf':
-    ensure  => present,
-    path    => $varnish::params::conf_file_path,
-    owner   => 'root',
-    group   => 'root',
-    mode    => '0644',
-    content => template('varnish/varnish-conf.erb'),
-    require => Package['varnish'],
-    notify  => Service['varnish'],
+  if $template != undef {
+    # varnish config file
+    file { 'varnish-conf':
+      ensure  => present,
+      path    => $varnish::params::conf_file_path,
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0644',
+      content => template($template),
+      require => Package['varnish'],
+      notify  => Service['varnish'],
+    }
   }
+  else{
+    # varnish config file
+    file { 'varnish-conf':
+      ensure  => present,
+      path    => $varnish::params::conf_file_path,
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0644',
+      content =>  template('varnish/varnish-conf.erb'),
+      require => Package['varnish'],
+      notify  => Service['varnish'],
+    }
+  }
+
 
   # storage dir
   $varnish_storage_dir = regsubst($varnish_storage_file, '(^/.*)(/.*$)', '\1')
